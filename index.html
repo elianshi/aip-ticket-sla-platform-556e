@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="aip-project-code" content="ticket-sla-platform-556e">
+  <title>智能告警工单与SLA监控平台 · 本地实机演示控制台</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-badge">SLA OPS</span>
+        <div>
+          <h1>智能告警工单与SLA监控平台</h1>
+          <p>面向「智能告警工单与SLA监控平台」的 AI 组织立项方案：涵盖需求细化、架构契约、工程实现与质量验收闭环。</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="conn-pill" id="api-mode-pill">连接检测中…</span>
+        <button type="button" class="btn btn-ghost" id="btn-theme">浅色模式</button>
+        <button type="button" class="btn btn-primary" id="btn-new-ticket">+ 上报故障工单</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="kpi-grid" id="kpi-grid" aria-label="核心运行指标"></section>
+
+    <section class="card-section" aria-labelledby="svc-heading">
+      <div class="section-head">
+        <div>
+          <h2 id="svc-heading">微服务健康矩阵（支持一键故障演练）</h2>
+          <p class="muted">由 Go 后端实时托管状态；点击「模拟降级 / 恢复健康」可实时观察全链路指标变化。</p>
+        </div>
+      </div>
+      <div class="services-grid" id="services-grid"></div>
+    </section>
+
+    <section class="card-section" aria-labelledby="tickets-heading">
+      <div class="section-head">
+        <div>
+          <h2 id="tickets-heading">SLA 工单流转中心</h2>
+          <p class="muted">P0 响应 SLA 15 分钟 · P1 60 分钟 · P2 4 小时；支持实时分诊、排查与闭环。</p>
+        </div>
+        <div class="filters">
+          <select id="filter-sev" aria-label="按级别筛选">
+            <option value="">全部级别</option>
+            <option value="P0">P0 紧急</option>
+            <option value="P1">P1 高优</option>
+            <option value="P2">P2 常规</option>
+            <option value="P3">P3 建议</option>
+          </select>
+          <select id="filter-status" aria-label="按状态筛选">
+            <option value="">全部状态</option>
+            <option value="open">待处理 (open)</option>
+            <option value="triaged">已分诊 (triaged)</option>
+            <option value="investigating">排查中 (investigating)</option>
+            <option value="resolved">已解决 (resolved)</option>
+          </select>
+          <input type="search" id="filter-q" placeholder="搜索工单编号、标题或责任人…" aria-label="搜索工单">
+        </div>
+      </div>
+
+      <div class="table-wrap" tabindex="0" role="region" aria-labelledby="tickets-heading">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">工单号</th>
+              <th scope="col">级别</th>
+              <th scope="col">故障标题</th>
+              <th scope="col">关联服务</th>
+              <th scope="col">责任人</th>
+              <th scope="col">当前状态</th>
+              <th scope="col">SLA 剩余</th>
+              <th scope="col">流转操作</th>
+            </tr>
+          </thead>
+          <tbody id="tickets-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="footer-note">
+      由 AIP 虚拟研发团队协同交付（构建者：智能告警工单与SLA监控平台-前端工程师 · 运维部署：Titan）
+    </footer>
+  </main>
+
+  <dialog id="ticket-dialog" aria-labelledby="dialog-title" closedby="any">
+    <div class="dialog-head">
+      <h2 id="dialog-title">上报新故障工单</h2>
+      <form method="dialog"><button class="btn-icon" aria-label="关闭">✕</button></form>
+    </div>
+    <form id="ticket-form" class="dialog-form">
+      <label>
+        <span>故障标题 *</span>
+        <input type="text" id="t-title" required placeholder="例如：结算服务 Redis 连接超时">
+      </label>
+      <div class="form-row">
+        <label>
+          <span>严重级别</span>
+          <select id="t-sev">
+            <option value="P0">P0（15分钟 SLA）</option>
+            <option value="P1" selected>P1（60分钟 SLA）</option>
+            <option value="P2">P2（4小时 SLA）</option>
+            <option value="P3">P3（24小时 SLA）</option>
+          </select>
+        </label>
+        <label>
+          <span>关联微服务</span>
+          <select id="t-svc">
+            <option value="svc-gateway">API 统一接入网关</option>
+            <option value="svc-billing">实时计费与对账核心</option>
+            <option value="svc-router">AI 模型推理路由</option>
+            <option value="svc-notify">飞书消息触达通道</option>
+          </select>
+        </label>
+      </div>
+      <label>
+        <span>指派值班人</span>
+        <input type="text" id="t-assignee" value="Titan（运维部署工程师）">
+      </label>
+      <label>
+        <span>现象描述</span>
+        <textarea id="t-desc" rows="3" placeholder="影响范围、告警指标与复现现象…"></textarea>
+      </label>
+      <div class="dialog-foot">
+        <button type="button" class="btn btn-ghost" id="btn-cancel">取消</button>
+        <button type="submit" class="btn btn-primary">提交并启动 SLA 计时</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="./app.js"></script>
+</body>
+</html>
